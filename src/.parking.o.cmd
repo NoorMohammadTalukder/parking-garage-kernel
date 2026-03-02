@@ -1038,6 +1038,10 @@ deps_/root/parking-garage/src/parking.o := \
   include/linux/string_helpers.h \
   include/linux/ctype.h \
   include/linux/string_choices.h \
+  include/linux/kthread.h \
+  include/linux/delay.h \
+  arch/x86/include/asm/delay.h \
+  include/asm-generic/delay.h \
 
 /root/parking-garage/src/parking.o: $(deps_/root/parking-garage/src/parking.o)
 

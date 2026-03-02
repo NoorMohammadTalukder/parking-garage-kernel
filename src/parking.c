@@ -8,6 +8,8 @@
 #include <linux/mutex.h>
 #include <linux/uaccess.h>
 #include <linux/string.h>
+#include <linux/kthread.h>
+#include <linux/delay.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("NoorMohammadTalukder");
@@ -18,6 +20,7 @@ MODULE_DESCRIPTION("Parking Garage Kernel Module");
 #define SPACES_COMPACT  1
 #define SPACES_SUV      2
 #define SPACES_TRUCK    3
+#define WARNING_LEVEL   10
 
 struct Car {
     int id;
@@ -38,8 +41,35 @@ static int total_cars        = 0;
 static int total_spaces_used = 0;
 static int next_car_id       = 1;
 static DEFINE_MUTEX(garage_mutex);
+static struct task_struct *manager_thread;
 
-/* Add car to garage */
+static int garage_manager(void *data)
+{
+    int available;
+    printk(KERN_INFO "Parking Manager: thread started\n");
+
+    while (!kthread_should_stop()) {
+        available = TOTAL_SPACES - total_spaces_used;
+        printk(KERN_INFO
+               "Parking Manager: Cars=%d Available=%d\n",
+               total_cars, available);
+
+        if (available <= WARNING_LEVEL && available > 0)
+            printk(KERN_WARNING
+                   "Parking Manager: WARNING! Only %d spaces left!\n",
+                   available);
+
+        if (available == 0)
+            printk(KERN_WARNING
+                   "Parking Manager: GARAGE IS FULL!\n");
+
+        ssleep(5);
+    }
+
+    printk(KERN_INFO "Parking Manager: thread stopped\n");
+    return 0;
+}
+
 static int enter_garage(char *type, int floor)
 {
     struct Car *car;
@@ -79,7 +109,6 @@ static int enter_garage(char *type, int floor)
     return car->id;
 }
 
-/* Remove car from garage */
 static int exit_garage(int car_id)
 {
     int f;
@@ -106,20 +135,30 @@ static int exit_garage(int car_id)
     return -1;
 }
 
-/* Show /proc/parking */
 static int parking_show(struct seq_file *m, void *v)
 {
     int f;
+    int available;
     struct Car *car;
 
     mutex_lock(&garage_mutex);
+
+    available = TOTAL_SPACES - total_spaces_used;
+
     seq_printf(m, "Parking Garage Status\n");
     seq_printf(m, "---------------------\n");
     seq_printf(m, "Total Floors : %d\n", TOTAL_FLOORS);
     seq_printf(m, "Total Spaces : %d\n", TOTAL_SPACES);
     seq_printf(m, "Cars Parked  : %d\n", total_cars);
-    seq_printf(m, "Available    : %d\n",
-               TOTAL_SPACES - total_spaces_used);
+    seq_printf(m, "Available    : %d\n", available);
+
+    if (available == 0)
+        seq_printf(m, "Status       : FULL!\n");
+    else if (available <= WARNING_LEVEL)
+        seq_printf(m, "Status       : ALMOST FULL!\n");
+    else
+        seq_printf(m, "Status       : OK\n");
+
     seq_printf(m, "\nFloor Details:\n");
 
     for (f = TOTAL_FLOORS; f >= 1; f--) {
@@ -134,11 +173,11 @@ static int parking_show(struct seq_file *m, void *v)
         }
         seq_printf(m, "\n");
     }
+
     mutex_unlock(&garage_mutex);
     return 0;
 }
 
-/* Handle write to /proc/parking_input */
 static ssize_t parking_write(struct file *file,
                               const char __user *ubuf,
                               size_t count, loff_t *ppos)
@@ -179,7 +218,6 @@ static const struct proc_ops parking_fops = {
     .proc_release = single_release,
 };
 
-/* For /proc/parking_input */
 static const struct proc_ops input_fops = {
     .proc_write   = parking_write,
 };
@@ -187,6 +225,7 @@ static const struct proc_ops input_fops = {
 static int __init parking_init(void)
 {
     int i;
+
     for (i = 1; i <= TOTAL_FLOORS; i++) {
         floors[i].floor_number = i;
         floors[i].spaces_used  = 0;
@@ -195,6 +234,15 @@ static int __init parking_init(void)
 
     proc_create("parking", 0, NULL, &parking_fops);
     proc_create("parking_input", 0222, NULL, &input_fops);
+
+    manager_thread = kthread_run(garage_manager,
+                                 NULL,
+                                 "garage_manager");
+    if (IS_ERR(manager_thread)) {
+        printk(KERN_ERR "Parking: failed to start thread\n");
+        return PTR_ERR(manager_thread);
+    }
+
     printk(KERN_INFO "Parking Garage: module loaded\n");
     return 0;
 }
@@ -204,6 +252,9 @@ static void __exit parking_exit(void)
     int i;
     struct Car *car, *tmp;
 
+    if (manager_thread)
+        kthread_stop(manager_thread);
+
     for (i = 1; i <= TOTAL_FLOORS; i++) {
         list_for_each_entry_safe(car, tmp,
                                  &floors[i].cars, list) {
@@ -211,6 +262,7 @@ static void __exit parking_exit(void)
             kfree(car);
         }
     }
+
     remove_proc_entry("parking", NULL);
     remove_proc_entry("parking_input", NULL);
     printk(KERN_INFO "Parking Garage: module unloaded\n");

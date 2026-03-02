@@ -35,6 +35,12 @@ MODULE_INFO(retpoline, "Y");
 
 static const char ____versions[]
 __used __section("__versions") =
+	"\x20\x00\x00\x00\xcb\xae\x17\x38"
+	"kthread_create_on_node\0\0"
+	"\x18\x00\x00\x00\x90\x03\xc3\xec"
+	"wake_up_process\0"
+	"\x28\x00\x00\x00\xb3\x1c\xa2\x87"
+	"__ubsan_handle_out_of_bounds\0\0\0\0"
 	"\x1c\x00\x00\x00\x48\x9f\xdb\x88"
 	"__check_object_size\0"
 	"\x18\x00\x00\x00\xc2\x9c\xc4\x13"
@@ -63,6 +69,8 @@ __used __section("__versions") =
 	"single_open\0"
 	"\x14\x00\x00\x00\x80\x2b\x0e\xc0"
 	"seq_printf\0\0"
+	"\x18\x00\x00\x00\x74\x39\x9f\x68"
+	"kthread_stop\0\0\0\0"
 	"\x1c\x00\x00\x00\x22\xf3\xea\x9f"
 	"remove_proc_entry\0\0\0"
 	"\x14\x00\x00\x00\x23\xb3\xd9\xc1"
@@ -73,14 +81,16 @@ __used __section("__versions") =
 	"single_release\0\0"
 	"\x14\x00\x00\x00\xbb\x6d\xfb\xbd"
 	"__fentry__\0\0"
-	"\x14\x00\x00\x00\x24\x8e\x68\xe1"
-	"proc_create\0"
 	"\x10\x00\x00\x00\x7e\x3a\x2c\x12"
 	"_printk\0"
+	"\x10\x00\x00\x00\xf9\x82\xa4\xf9"
+	"msleep\0\0"
+	"\x1c\x00\x00\x00\x6e\x64\xf7\xb3"
+	"kthread_should_stop\0"
 	"\x1c\x00\x00\x00\xca\x39\x82\x5b"
 	"__x86_return_thunk\0\0"
-	"\x28\x00\x00\x00\xb3\x1c\xa2\x87"
-	"__ubsan_handle_out_of_bounds\0\0\0\0"
+	"\x14\x00\x00\x00\x24\x8e\x68\xe1"
+	"proc_create\0"
 	"\x18\x00\x00\x00\x2e\x9f\xe7\xf6"
 	"module_layout\0\0\0"
 	"\x00\x00\x00\x00\x00\x00\x00\x00";
@@ -88,4 +98,4 @@ __used __section("__versions") =
 MODULE_INFO(depends, "");
 
 
-MODULE_INFO(srcversion, "93A10021FFC5A656A13D204");
+MODULE_INFO(srcversion, "8E7AF0422551EDE9A1622C6");
