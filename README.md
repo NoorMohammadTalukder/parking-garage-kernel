@@ -54,19 +54,7 @@ The module manages a 5-floor parking garage where:
 
 ---
 
-## Project Structure
-```
-parking-garage-kernel/
-├── src/
-│   └── parking.c        ← Main kernel module
-├── userspace/
-│   ├── producer.c       ← Add cars to garage
-│   └── consumer.c       ← Remove cars from garage
-├── Makefile             ← Build file
-└── README.md            ← This file
-```
 
----
 
 ## Requirements
 
