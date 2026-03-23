@@ -15,7 +15,7 @@ scheduling capabilities.
 - [How To Run](#how-to-run)
 - [Usage](#usage)
 - [Technical Details](#technical-details)
-- [Author](#author)
+
 
 ---
 
@@ -238,14 +238,3 @@ parking_show()             // Generate /proc/parking output
 parking_write()            // Handle /proc/parking_input
 ```
 
----
-
-## Author
-
-**Noor Mohammad Talukder**
-Ph.D. Student, Computer Science
-Florida State University
-
-- Email: nt25e@fsu.edu
-- GitHub: github.com/NoorMohammadTalukder
-- LinkedIn: linkedin.com/in/noormohammadtalukder
